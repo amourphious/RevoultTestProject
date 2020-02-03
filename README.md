@@ -6,7 +6,7 @@ See usage in TransferClient.java
 ### GET: account/<account_id>
 *returns account balance*
 See usage in TransferClient.java
-### POST transfer
+### POST: transfer
 *payload: "payer:<account_id>,beneficiary:<account_id>,amount:<amount_to_transfer>"*
 *returns transaction-Id*
 initializes the transfer
