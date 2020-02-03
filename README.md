@@ -11,7 +11,7 @@ See usage in TransferClient.java
 *returns transaction-Id*
 initializes the transfer
 
-###Exceptions
+### Exceptions
 #### BadRequestException
 *request is invalid*
 #### ServiceInternalFailure
