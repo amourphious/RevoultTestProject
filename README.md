@@ -3,7 +3,7 @@
 ### GET: transaction/<transaction_id>
 *returns the details of transaction*
 See usage in TransferClient.java
-### GET account/<account_id>
+### GET: account/<account_id>
 *returns account balance*
 See usage in TransferClient.java
 ### POST transfer
