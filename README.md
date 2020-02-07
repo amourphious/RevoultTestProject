@@ -27,6 +27,8 @@ OR
 ```{"amount": -1}```
 
 ### POST: transfer
+Usage: ```curl -d '{"payer": <account_id>, "beneficiary": <account_id>, "amount": <amount_int>}' -X POST http://localhost:8001/transfer```
+
 *payload:* ```{"payer":<account_id>,"beneficiary":<account_id>,"amount":<amount_to_transfer>}```
 
 *returns:* ```{"transactionId": <id>}```
