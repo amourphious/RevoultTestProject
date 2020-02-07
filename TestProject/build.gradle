@@ -46,6 +46,13 @@ dependencies {
 	// guice
 	compile 'com.google.inject:guice:4.2.2'
 	
+	// json
+	compile group: 'org.json', name: 'json', version: '20190722'
+	
+	// http
+	compile group: 'com.sun.net.httpserver', name: 'http', version: '20070405'
+	
+	// spock
 	testCompile platform("org.spockframework:spock-bom:2.0-M1-groovy-2.5")
   	testCompile "org.spockframework:spock-core"
   	testCompile "org.spockframework:spock-junit4"
@@ -55,7 +62,7 @@ dependencies {
   	testRuntime "net.bytebuddy:byte-buddy:1.9.3" // allows mocking of classes (in addition to interfaces)
   	testRuntime "org.objenesis:objenesis:2.6"
   	
-	  // Use JUnit test framework
+	// Use JUnit test framework
     testCompile 'junit:junit:4.12'
 }
 

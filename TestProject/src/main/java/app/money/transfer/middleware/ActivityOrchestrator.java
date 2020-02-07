@@ -1,4 +1,7 @@
-package app.money.transfer.main;
+package app.money.transfer.middleware;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.google.inject.Injector;
 
@@ -6,7 +9,6 @@ import app.money.transfer.activity.AccountDetailsRequest;
 import app.money.transfer.activity.Activity;
 import app.money.transfer.activity.TransactionDetailsRequest;
 import app.money.transfer.activity.TransferRequest;
-import app.money.transfer.executor.AccountExecutor;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -22,8 +24,9 @@ import lombok.RequiredArgsConstructor;
  *
  */
 @RequiredArgsConstructor
-public class TransferService {
+public class ActivityOrchestrator {
 	private final Injector activityInjector;
+	
 	/**
 	 * 
 	 * @param path valid path: transaction/<Long_Id> or account/<Long_Id>
@@ -35,19 +38,17 @@ public class TransferService {
 		switch(params[0]) {
 		case "transaction":
 			try {
-				return activityInjector
-					.getInstance(Activity.class)
-					.getTransactionDetails(new TransactionDetailsRequest(Long.valueOf(params[1])))
-					.toString();
+				return new JSONObject(activityInjector.getInstance(Activity.class)
+						.getTransactionDetails(new TransactionDetailsRequest(Long.valueOf(params[1]))))
+						.toString();
 			} catch(Exception e) {
 				throw new ServiceInternalFailure("500: ServiceInternalFailure: ", e);
 			}
 		case "account":
 			try {
-				return activityInjector
-					.getInstance(Activity.class)
-					.getAccountDetails(new AccountDetailsRequest(Long.valueOf(params[1])))
-					.getAmount().toString();
+				return new JSONObject(activityInjector.getInstance(Activity.class)
+						.getAccountDetails(new AccountDetailsRequest(Long.valueOf(params[1]))))
+						.toString();
 			} catch (Exception e){
 				throw new ServiceInternalFailure("500: ServiceInternalFailure", e);
 			}
@@ -58,17 +59,16 @@ public class TransferService {
 	/**
 	 * 
 	 * @param path valid path: transfer
-	 * @param payload valid payload: "payer:<Long_Id>,beneficiary:<Long_Id>,amount:<Int_amount>"
+	 * @param payload valid payload: "{payer:<Long_Id>,beneficiary:<Long_Id>,amount:<Int_amount>}"
 	 * @return
 	 */
 	public String post(String path, String payload) {
-		if (path == "transfer") {
+		if ("transfer".equals(path)) {
 			TransferRequest request = parsePayload(payload);
 			try {
-				return activityInjector
-						.getInstance(Activity.class)
-						.transfer(request)
-						.getTransactionId().toString();
+				return new JSONObject(activityInjector.getInstance(Activity.class)
+						.transfer(request)).toString();
+				
 			} catch(Exception e) {
 				throw new ServiceInternalFailure("500: ServiceInternalFailure", e);
 			}
@@ -77,33 +77,20 @@ public class TransferService {
 	}
 	
 	private TransferRequest parsePayload(String payload) {
-		String[] params = payload.split(",");
-		if (params.length == 3) {
-			Long fromAccount = null;
-			Long toAccount = null;
-			Integer amount = null;
-			for (String param: params) {
-				String[] keyValue = param.split(":");
-				try {
-					switch(keyValue[0]) {
-					case "payer": 
-						fromAccount = Long.valueOf(keyValue[1]);
-						break;
-					case "beneficiary":
-						toAccount = Long.valueOf(keyValue[1]);
-						break;
-					case "amount":
-						amount = Integer.valueOf(keyValue[1]);
-						break;
-					default: throw new BadRequestException("Invalid payload!!");
-					}
-				} catch (NumberFormatException e) {
-					throw new BadRequestException("400: Invalid payload");
-				}
+		try {
+			JSONObject params = new JSONObject(payload);
+			if (params.has("payer") && params.has("beneficiary") && params.has("amount")) {
+				Long fromAccount = params.getLong("payer");
+				Long toAccount = params.getLong("beneficiary");
+				Integer amount = params.getInt("amount");
+				return new TransferRequest(fromAccount, toAccount, amount);
 			}
-			return new TransferRequest(fromAccount, toAccount, amount);
+		} catch (JSONException e) {
+			throw new BadRequestException("Please provide valid parameters");
+		} catch (Exception e) {
+			throw new ServiceInternalFailure("Something went wrong", e);
 		}
-		throw new BadRequestException("404: not forund");
+		throw new BadRequestException("Please provide valid parameters");
 	}
 
 	private  void validateParams(String[] params) {
@@ -118,7 +105,7 @@ public class TransferService {
 		}
 	}
 	
-	static class BadRequestException extends RuntimeException {
+	public static class BadRequestException extends RuntimeException {
 
 		public BadRequestException(String string) {
 			super(string);
